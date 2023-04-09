@@ -1,6 +1,7 @@
 package goset
 
 import (
+	"reflect"
 	"sync"
 )
 
@@ -78,6 +79,14 @@ func (s *Set) ToList() []interface{} {
 		i++
 	}
 	return data
+}
+
+// Equals returns whether Set s has the same members with Set t
+func (s *Set) Equals(t *Set) bool {
+	if t == nil {
+		return false
+	}
+	return reflect.DeepEqual(s.data, t.data)
 }
 
 // IsSub returns whether it's a part of Set t

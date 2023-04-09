@@ -41,9 +41,20 @@ func TestGoSet(t *testing.T) {
 
 	t.Run("test set has", func(t *testing.T) {
 		var set = New(1, 2, 3, 4)
-		fmt.Println("{1,2,3,4} has 1? -->", set.Has(1))
-		fmt.Println("{1,2,3,4} has 5? -->", set.Has(5))
-		fmt.Println("{1,2,3,4} has nil? -->", set.Has(nil))
+		fmt.Println("{1,2,3,4} has 1 ? -->", set.Has(1))
+		fmt.Println("{1,2,3,4} has 5 ? -->", set.Has(5))
+		fmt.Println("{1,2,3,4} has nil ? -->", set.Has(nil))
+	})
+
+	t.Run("test set equal", func(t *testing.T) {
+		var setA = New(1, 2, 3, 4)
+		var setB = New(3, 4, 1, 2)
+		var setC = New(9, 10)
+		var setD *Set
+		fmt.Println("{1,2,3,4} equals {3,4,1,2} ? -->", setA.Equals(setB))
+		fmt.Println("{1,2,3,4} equals {9,10} ? -->", setA.Equals(setC))
+		fmt.Println("{1,2,3,4} equals nil ? -->", setA.Equals(setD))
+		fmt.Println("{1,2,3,4} equals itself ? -->", setA.Equals(setA))
 	})
 
 	t.Run("test set isSub", func(t *testing.T) {
