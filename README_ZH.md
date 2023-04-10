@@ -1,24 +1,22 @@
-English | [中文](README_ZH.md)
+一个协程安全的 Golang Set 实现。
 
-A goroutine-safe Set implementation in Golang.
+# 特点
 
-# Features
+- 协程安全
+- 支持元素增、删、包含判断、清空
+- 支持集合运算：交、并、差、补
+- 支持集合比较：包含、相等
+- 支持深拷贝
 
-- Goroutine safe
-- Support add/delete/exist/clear elements
-- Support set math operations: intersect/union/subtract/complement
-- Support set compare: contain/equal
-- Support deep copy
-
-# Install
+# 安装
 
 ```
 $ go get github.com/Visforest/goset
 ```
 
-# Usages
+# 使用方法
 
-Element operations:
+元素操作：
 
 ```go
 // create a new set
@@ -33,7 +31,7 @@ fruits.Has("apple")
 fruits.Clear()
 ```
 
-Set view operations:
+集合操作：
 
 ```go
 var fruits = goset.New("banana", "tomato", "peach")
@@ -45,7 +43,7 @@ fruits.Length()
 fruits.Copy()
 ```
 
-Set math operations:
+集合数学运算：
 
 ```go
 var fruits = goset.New("banana", "tomato", "peach")
@@ -61,7 +59,7 @@ fmt.Println("fruits,vegatables intersect:", fruits.Intersect(vegatables).ToList(
 fmt.Println("fruits,vegatables complement:", fruits.Complement(vegatables).ToList())
 ```
 
-Set compare operations:
+集合比较：
 
 ```go
 var numbers1 = goset.New(1, 3, 0, -3, 5)
