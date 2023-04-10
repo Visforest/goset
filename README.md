@@ -18,6 +18,7 @@ $ go get github.com/Visforest/goset
 
 # Usages
 
+## Set
 Element operations:
 
 ```go
@@ -71,4 +72,20 @@ var numbers3 = goset.New(3, 0, 3)
 fmt.Println("numbers2 is sub set of numbers1 ?", numbers2.IsSub(numbers1))
 // numbers2 equals numbers3 ? true
 fmt.Println("numbers2 equals numbers3 ?", numbers2.Equals(numbers3))
+```
+
+## IntSet
+
+IntSet has same methods with Set, but only accecpts `int` elements, and is available to export sorted slice result:
+
+```go
+var nums = goset.NewIntSet(9,3,5,7,3,1)
+// [1,3,5,7,9]
+fmt.Println(nums.Tolist(goset.Asc))
+// [9,7,5,3,1]
+fmt.Println(nums.Tolist(goset.Desc))
+// random order of [1,3,5,7,9]
+fmt.Println(nums.Tolist(goset.Random))
+// random order of [1,3,5,7,9]
+fmt.Println(nums.Tolist())
 ```

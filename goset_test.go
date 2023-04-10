@@ -3,6 +3,7 @@ package goset
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestGoSet(t *testing.T) {
@@ -144,6 +145,7 @@ func TestGoSet(t *testing.T) {
 				setC = setA.Union(setB)
 			}()
 		}
+		time.Sleep(time.Second * 5)
 		fmt.Println("empty set A concurrently write and union with set B {0}, got set C -->", setC.ToList())
 	})
 }

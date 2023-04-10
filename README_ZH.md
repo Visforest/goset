@@ -16,6 +16,7 @@ $ go get github.com/Visforest/goset
 
 # 使用方法
 
+## Set
 元素操作：
 
 ```go
@@ -69,4 +70,20 @@ var numbers3 = goset.New(3, 0, 3)
 fmt.Println("numbers2 is sub set of numbers1 ?", numbers2.IsSub(numbers1))
 // numbers2 equals numbers3 ? true
 fmt.Println("numbers2 equals numbers3 ?", numbers2.Equals(numbers3))
+```
+
+## IntSet
+
+IntSet 方法和 Set 方法一样, 但仅接收 `int` 类型的元素, 并且能够导出有序的 slice：
+
+```go
+var nums = goset.NewIntSet(9,3,5,7,3,1)
+// [1,3,5,7,9]
+fmt.Println(nums.Tolist(goset.Asc))
+// [9,7,5,3,1]
+fmt.Println(nums.Tolist(goset.Desc))
+// random order of [1,3,5,7,9]
+fmt.Println(nums.Tolist(goset.Random))
+// random order of [1,3,5,7,9]
+fmt.Println(nums.Tolist())
 ```
