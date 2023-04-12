@@ -21,7 +21,7 @@ $ go get github.com/Visforest/goset
 
 ```go
 // create a new set
-var fruits = goset.New("banana", "tomato", "peach")
+var fruits = goset.NewSet("banana", "tomato", "peach")
 // add elements
 fruits.Add("apple","pear")
 // delete elements
@@ -35,7 +35,7 @@ fruits.Clear()
 集合操作：
 
 ```go
-var fruits = goset.New("banana", "tomato", "peach")
+var fruits = goset.NewSet("banana", "tomato", "peach")
 // get elements in form of slice
 fruits.ToList() 
 // get elements count
@@ -47,8 +47,8 @@ fruits.Copy()
 集合数学运算：
 
 ```go
-var fruits = goset.New("banana", "tomato", "peach")
-var vegatables = goset.New("tomato", "cabbage")
+var fruits = goset.NewSet("banana", "tomato", "peach")
+var vegatables = goset.NewSet("tomato", "cabbage")
 
 // fruits,vegatables union: [banana tomato peach cabbage]
 fmt.Println("fruits,vegatables union:", fruits.Union(vegatables).ToList())
@@ -63,9 +63,9 @@ fmt.Println("fruits,vegatables complement:", fruits.Complement(vegatables).ToLis
 集合比较：
 
 ```go
-var numbers1 = goset.New(1, 3, 0, -3, 5)
-var numbers2 = goset.New(0, 3)
-var numbers3 = goset.New(3, 0, 3)
+var numbers1 = goset.NewSet(1, 3, 0, -3, 5)
+var numbers2 = goset.NewSet(0, 3)
+var numbers3 = goset.NewSet(3, 0, 3)
 // numbers2 is sub set of numbers1 ? true
 fmt.Println("numbers2 is sub set of numbers1 ?", numbers2.IsSub(numbers1))
 // numbers2 equals numbers3 ? true

@@ -7,28 +7,28 @@ import (
 
 type Set struct {
 	m    sync.RWMutex
-	data map[interface{}]*struct{}
+	data map[interface{}]struct{}
 }
 
-// New creates a new Set
-func New(v ...interface{}) *Set {
-	s := &Set{data: map[interface{}]*struct{}{}}
+// NewSet creates a new Set
+func NewSet(v ...interface{}) *Set {
+	s := &Set{data: map[interface{}]struct{}{}}
 	if len(v) > 0 {
 		s.Add(v...)
 	}
 	return s
 }
 
-// Add add values
+// Add add elements
 func (s *Set) Add(v ...interface{}) {
 	defer s.m.Unlock()
 	s.m.Lock()
 	for _, ele := range v {
-		s.data[ele] = nil
+		s.data[ele] = struct{}{}
 	}
 }
 
-// Delete delete values
+// Delete delete elements
 func (s *Set) Delete(v ...interface{}) {
 	defer s.m.Unlock()
 	s.m.Lock()
@@ -37,11 +37,11 @@ func (s *Set) Delete(v ...interface{}) {
 	}
 }
 
-// Clear clears all values
+// Clear clears all elements
 func (s *Set) Clear() {
 	defer s.m.Unlock()
 	s.m.Lock()
-	s.data = map[interface{}]*struct{}{}
+	s.data = map[interface{}]struct{}{}
 }
 
 // Copy returns a deep copy of itself
@@ -49,9 +49,9 @@ func (s *Set) Copy() *Set {
 	defer s.m.RUnlock()
 	s.m.RLock()
 
-	data := make(map[interface{}]*struct{})
+	data := make(map[interface{}]struct{})
 	for v := range s.data {
-		data[v] = nil
+		data[v] = struct{}{}
 	}
 	return &Set{data: data}
 }
@@ -98,11 +98,12 @@ func (s *Set) IsSub(t *Set) bool {
 		// compare with itself
 		return true
 	}
-	defer s.m.RUnlock()
-	defer t.m.RUnlock()
 
 	s.m.RLock()
 	t.m.RLock()
+
+	defer s.m.RUnlock()
+	defer t.m.RUnlock()
 
 	if s.Length() > t.Length() {
 		return false
@@ -118,23 +119,19 @@ func (s *Set) IsSub(t *Set) bool {
 // Union unions with Set t and returns a new Set
 //
 // for example:
-// var a=New(1,2,3)
-// var b=New(2,3,4)
+// var a=NewSet(1,2,3)
+// var b=NewSet(2,3,4)
 // a.Union(b) returns {1,2,3,4}
 func (s *Set) Union(t *Set) *Set {
 	var r = s.Copy()
-	if t == nil {
+	if t == nil || s == t {
 		return r
 	}
-	if s == t {
-		// union itself
-		return r
-	}
-	defer s.m.RUnlock()
-	defer t.m.RUnlock()
-
 	s.m.RLock()
 	t.m.RLock()
+
+	defer s.m.RUnlock()
+	defer t.m.RUnlock()
 
 	r.Add(t.ToList()...)
 	return r
@@ -143,11 +140,11 @@ func (s *Set) Union(t *Set) *Set {
 // Intersect returns a new Set Whose elements exist in both Set
 //
 // for example:
-// var a=New(1,2,3)
-// var b=New(2,3,4)
+// var a=NewSet(1,2,3)
+// var b=NewSet(2,3,4)
 // a.Intersect(b) returns {2,3}
 func (s *Set) Intersect(t *Set) *Set {
-	var r = New()
+	var r = NewSet()
 	if t == nil || s.Length() == 0 || t.Length() == 0 {
 		return r
 	}
@@ -156,11 +153,11 @@ func (s *Set) Intersect(t *Set) *Set {
 		return s.Copy()
 	}
 
-	defer s.m.RUnlock()
-	defer t.m.RUnlock()
-
 	s.m.RLock()
 	t.m.RLock()
+
+	defer s.m.RUnlock()
+	defer t.m.RUnlock()
 
 	if s.Length() >= t.Length() {
 		for v := range t.data {
@@ -181,24 +178,24 @@ func (s *Set) Intersect(t *Set) *Set {
 // Subtract returns a new Set Whose elements exist in itself but don't exist in Set t
 //
 // for example:
-// var a=New(1,2,3)
-// var b=New(2,3,4)
+// var a=NewSet(1,2,3)
+// var b=NewSet(2,3,4)
 // a.Subtract(b) returns {1}
 func (s *Set) Subtract(t *Set) *Set {
 	if t == nil || t.Length() == 0 {
 		return s.Copy()
 	}
-	var r = New()
+	var r = NewSet()
 	if s == t {
 		// subtract itself
 		return r
 	}
 
-	defer s.m.RUnlock()
-	defer t.m.RUnlock()
-
 	s.m.RLock()
 	t.m.RLock()
+
+	defer s.m.RUnlock()
+	defer t.m.RUnlock()
 
 	for v := range s.data {
 		if !t.Has(v) {
@@ -211,26 +208,23 @@ func (s *Set) Subtract(t *Set) *Set {
 // Complement returns a new Set Whose elements only exists in one Set
 //
 // for example:
-// var a=New(1,2,3)
-// var b=New(2,3,4)
+// var a=NewSet(1,2,3)
+// var b=NewSet(2,3,4)
 // a.Complement(b) returns {1,4}
 func (s *Set) Complement(t *Set) *Set {
-	if s.Length() == 0 {
-		return t.Copy()
-	}
-	if t == nil || t.Length() == 0 {
+	if t == nil || s.Length() == 0 || t.Length() == 0 {
 		return s.Copy()
 	}
 
 	if s == t {
-		return New()
+		return NewSet()
 	}
-
-	defer s.m.RUnlock()
-	defer t.m.RUnlock()
 
 	s.m.RLock()
 	t.m.RLock()
+
+	defer s.m.RUnlock()
+	defer t.m.RUnlock()
 
 	var r = s.Union(t)
 	if s.Length() >= t.Length() {
