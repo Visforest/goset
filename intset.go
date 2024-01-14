@@ -35,7 +35,7 @@ func NewIntSet(vals ...int) *IntSet {
 	return s
 }
 
-// Add add elements
+// Add adds elements
 func (s *IntSet) Add(vals ...int) {
 	if len(vals) == 0 {
 		return
