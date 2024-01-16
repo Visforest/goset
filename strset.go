@@ -5,14 +5,14 @@ import (
 	"sync"
 )
 
-type Set struct {
+type StrSet struct {
 	m    sync.RWMutex
-	data map[any]struct{}
+	data map[string]struct{}
 }
 
-// NewSet creates a new Set
-func NewSet(v ...any) *Set {
-	s := &Set{data: map[any]struct{}{}}
+// NewStrSet creates a new StrSet
+func NewStrSet(v ...string) *StrSet {
+	s := &StrSet{data: map[string]struct{}{}}
 	if len(v) > 0 {
 		s.Add(v...)
 	}
@@ -20,11 +20,11 @@ func NewSet(v ...any) *Set {
 }
 
 // Add adds elements
-func (s *Set) Add(v ...any) {
+func (s *StrSet) Add(v ...string) {
 	defer s.m.Unlock()
 	s.m.Lock()
 	if s.data == nil {
-		s.data = make(map[any]struct{})
+		s.data = make(map[string]struct{})
 	}
 	for _, ele := range v {
 		s.data[ele] = struct{}{}
@@ -32,11 +32,11 @@ func (s *Set) Add(v ...any) {
 }
 
 // Delete delete elements
-func (s *Set) Delete(v ...any) {
+func (s *StrSet) Delete(v ...string) {
 	defer s.m.Unlock()
 	s.m.Lock()
 	if s.data == nil {
-		s.data = make(map[any]struct{})
+		s.data = make(map[string]struct{})
 	}
 	for _, ele := range v {
 		delete(s.data, ele)
@@ -44,51 +44,51 @@ func (s *Set) Delete(v ...any) {
 }
 
 // Clear clears all elements
-func (s *Set) Clear() {
+func (s *StrSet) Clear() {
 	defer s.m.Unlock()
 	s.m.Lock()
-	s.data = make(map[any]struct{})
+	s.data = make(map[string]struct{})
 }
 
 // Copy returns a deep copy of itself
-func (s *Set) Copy() *Set {
+func (s *StrSet) Copy() *StrSet {
 	defer s.m.RUnlock()
 	s.m.RLock()
 	if s.data == nil {
-		s.data = make(map[any]struct{})
+		s.data = make(map[string]struct{})
 	}
 
-	data := make(map[any]struct{})
+	data := make(map[string]struct{})
 	for v := range s.data {
 		data[v] = struct{}{}
 	}
-	return &Set{data: data}
+	return &StrSet{data: data}
 }
 
-// Length returns Set length
-func (s *Set) Length() int {
+// Length returns StrSet length
+func (s *StrSet) Length() int {
 	return len(s.data)
 }
 
-// Has returns whether v exists in Set
-func (s *Set) Has(v any) bool {
+// Has returns whether v exists in StrSet
+func (s *StrSet) Has(v string) bool {
 	if s.data == nil {
-		s.data = make(map[any]struct{})
+		s.data = make(map[string]struct{})
 	}
 	_, ok := s.data[v]
 	return ok
 }
 
 // ToList returns data slice
-func (s *Set) ToList() []any {
+func (s *StrSet) ToList() []string {
 	defer s.m.RUnlock()
 	s.m.RLock()
 
 	if s.data == nil {
-		s.data = make(map[any]struct{})
+		s.data = make(map[string]struct{})
 	}
 
-	var data = make([]any, s.Length())
+	var data = make([]string, s.Length())
 	var i int
 	for d := range s.data {
 		data[i] = d
@@ -97,16 +97,16 @@ func (s *Set) ToList() []any {
 	return data
 }
 
-// Equals returns whether Set s has the same members with Set t
-func (s *Set) Equals(t *Set) bool {
+// Equals returns whether StrSet s has the same members with StrSet t
+func (s *StrSet) Equals(t *StrSet) bool {
 	if t == nil {
 		return false
 	}
 	return reflect.DeepEqual(s.data, t.data)
 }
 
-// IsSub returns whether it's a part of Set t
-func (s *Set) IsSub(t *Set) bool {
+// IsSub returns whether it's a part of StrSet t
+func (s *StrSet) IsSub(t *StrSet) bool {
 	if t == nil {
 		return false
 	}
@@ -120,11 +120,12 @@ func (s *Set) IsSub(t *Set) bool {
 
 	defer s.m.RUnlock()
 	defer t.m.RUnlock()
+
 	if s.data == nil {
-		s.data = make(map[any]struct{})
+		s.data = make(map[string]struct{})
 	}
 	if t.data == nil {
-		t.data = make(map[any]struct{})
+		t.data = make(map[string]struct{})
 	}
 
 	if s.Length() > t.Length() {
@@ -138,13 +139,13 @@ func (s *Set) IsSub(t *Set) bool {
 	return true
 }
 
-// Union unions with Set t and returns a new Set
+// Union unions with StrSet t and returns a new StrSet
 //
 // for example:
-// var a=NewSet(1,2,3)
-// var b=NewSet(2,3,4)
-// a.Union(b) returns {1,2,3,4}
-func (s *Set) Union(t *Set) *Set {
+// var a=NewStrSet("1","2","3")
+// var b=NewStrSet("2","3","4")
+// a.Union(b) returns {"1","2","3","4"}
+func (s *StrSet) Union(t *StrSet) *StrSet {
 	var r = s.Copy()
 	if t == nil || s == t {
 		return r
@@ -159,14 +160,14 @@ func (s *Set) Union(t *Set) *Set {
 	return r
 }
 
-// Intersect returns a new Set Whose elements exist in both Set
+// Intersect returns a new StrSet Whose elements exist in both StrSet
 //
 // for example:
-// var a=NewSet(1,2,3)
-// var b=NewSet(2,3,4)
-// a.Intersect(b) returns {2,3}
-func (s *Set) Intersect(t *Set) *Set {
-	var r = NewSet()
+// var a=NewStrSet("1","2","3")
+// var b=NewStrSet("2","3","4")
+// a.Intersect(b) returns {"2","3"}
+func (s *StrSet) Intersect(t *StrSet) *StrSet {
+	var r = NewStrSet()
 	if t == nil || s.Length() == 0 || t.Length() == 0 {
 		return r
 	}
@@ -182,10 +183,10 @@ func (s *Set) Intersect(t *Set) *Set {
 	defer t.m.RUnlock()
 
 	if s.data == nil {
-		s.data = make(map[any]struct{})
+		s.data = make(map[string]struct{})
 	}
 	if t.data == nil {
-		t.data = make(map[any]struct{})
+		t.data = make(map[string]struct{})
 	}
 
 	if s.Length() >= t.Length() {
@@ -204,17 +205,17 @@ func (s *Set) Intersect(t *Set) *Set {
 	return r
 }
 
-// Subtract returns a new Set Whose elements exist in itself but don't exist in Set t
+// Subtract returns a new StrSet Whose elements exist in itself but don't exist in StrSet t
 //
 // for example:
-// var a=NewSet(1,2,3)
-// var b=NewSet(2,3,4)
-// a.Subtract(b) returns {1}
-func (s *Set) Subtract(t *Set) *Set {
+// var a=NewStrSet("1","2","3")
+// var b=NewStrSet("2","3","4")
+// a.Subtract(b) returns {"1"}
+func (s *StrSet) Subtract(t *StrSet) *StrSet {
 	if t == nil || t.Length() == 0 {
 		return s.Copy()
 	}
-	var r = NewSet()
+	var r = NewStrSet()
 	if s == t {
 		// subtract itself
 		return r
@@ -227,10 +228,10 @@ func (s *Set) Subtract(t *Set) *Set {
 	defer t.m.RUnlock()
 
 	if s.data == nil {
-		s.data = make(map[any]struct{})
+		s.data = make(map[string]struct{})
 	}
 	if t.data == nil {
-		t.data = make(map[any]struct{})
+		t.data = make(map[string]struct{})
 	}
 
 	for v := range s.data {
@@ -241,19 +242,19 @@ func (s *Set) Subtract(t *Set) *Set {
 	return r
 }
 
-// Complement returns a new Set Whose elements only exists in one Set
+// Complement returns a new StrSet Whose elements only exists in one StrSet
 //
 // for example:
-// var a=NewSet(1,2,3)
-// var b=NewSet(2,3,4)
-// a.Complement(b) returns {1,4}
-func (s *Set) Complement(t *Set) *Set {
+// var a=NewStrSet("1","2","3")
+// var b=NewStrSet("2","3","4")
+// a.Complement(b) returns {"1","4"}
+func (s *StrSet) Complement(t *StrSet) *StrSet {
 	if t == nil || s.Length() == 0 || t.Length() == 0 {
 		return s.Copy()
 	}
 
 	if s == t {
-		return NewSet()
+		return NewStrSet()
 	}
 
 	s.m.RLock()
@@ -261,12 +262,11 @@ func (s *Set) Complement(t *Set) *Set {
 
 	defer s.m.RUnlock()
 	defer t.m.RUnlock()
-
 	if s.data == nil {
-		s.data = make(map[any]struct{})
+		s.data = make(map[string]struct{})
 	}
 	if t.data == nil {
-		t.data = make(map[any]struct{})
+		t.data = make(map[string]struct{})
 	}
 
 	var r = s.Union(t)
