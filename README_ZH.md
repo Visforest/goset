@@ -1,4 +1,8 @@
-一个协程安全的 Golang Set 实现。
+[English](README.md) | 中文
+
+一个协程安全的 Golang Set 实现，支持多种数量类型和特性。
+
+goset 基于 Go 泛型实现，因此 Go 版本需 >=1.18.
 
 # 特点
 
@@ -7,6 +11,8 @@
 - 支持集合运算：交、并、差、补
 - 支持集合比较：包含、相等
 - 支持深拷贝
+- 支持多种元素数据类型，如：int8,int16,int32,int64,int,string 等等
+- 支持先进先出 Set，先进后出 Set，有序 Set 
 
 # 安装
 
@@ -16,74 +22,125 @@ $ go get github.com/Visforest/goset
 
 # 使用方法
 
-## Set
-元素操作：
+goset 中的各类 Set 有如下相同的函数：
+- Add(...vals)
+- Delete(...vals)
+- Clear()
+- Length() int
+- Has(v) bool
+- Copy() *set
+- ToList() []type
+- Equals(*set) bool
+- IsSub(*set) bool
+- Union(*set) *set
+- Intersect(*set) *set
+- Subtract(*set) *set
+- Complement(*set) *set
 
+## 普通 Set
+
+指定元素数据类型来使用：
 ```go
-// create a new set
-var fruits = goset.NewSet("banana", "tomato", "peach")
-// add elements
-fruits.Add("apple","pear")
-// delete elements
-fruits.Delete("tomato")
-// check whether element exists in set
-fruits.Has("apple")
-// clear all elements
-fruits.Clear()
+var myset=goset.NewSet[string]("a","b","e")
+myset.Add("a","c")
+// [ a b e c] 
+fmt.Println(myset.ToList())
 ```
 
-集合操作：
-
+对于 int 和 string 类型的元素，已有预置的 `IntSet` 和 `StrSet` 可供直接使用：
 ```go
-var fruits = goset.NewSet("banana", "tomato", "peach")
-// get elements in form of slice
-fruits.ToList() 
-// get elements count
-fruits.Length()
-// get a deep copy of fruits
-fruits.Copy()
+var s1 goset.StrSet
+// samsung is in s1? false
+fmt.Printf("samsung is in s1? %t", s1.Has("samsung"))
 ```
 
-集合数学运算：
-
+随意定制你的 Set 类型，例如：
 ```go
-var fruits = goset.NewSet("banana", "tomato", "peach")
-var vegatables = goset.NewSet("tomato", "cabbage")
+type user struct {
+	name string
+	age  int
+}
+type userSet = goset.Set[user]
 
-// fruits,vegatables union: [banana tomato peach cabbage]
-fmt.Println("fruits,vegatables union:", fruits.Union(vegatables).ToList())
-// fruits,vegatables subtract: [peach banana]
-fmt.Println("fruits,vegatables subtract:", fruits.Subtract(vegatables).ToList())
-// fruits,vegatables intersect: [tomato]
-fmt.Println("fruits,vegatables intersect:", fruits.Intersect(vegatables).ToList())
-// fruits,vegatables complement: [peach banana cabbage]
-fmt.Println("fruits,vegatables complement:", fruits.Complement(vegatables).ToList())
+func main() {
+	s := userSet{Data: make(map[user]struct{})}
+	s.Add(
+		user{
+			name: "Mickey",
+			age:  10,
+		},
+		user{
+			name: "Tom",
+			age:  20,
+		},
+		user{
+			name: "Mickey",
+			age:  10,
+		},
+		user{
+			name: "Tiana",
+			age:  21,
+		},
+	)
+	// {Mickey 10}
+	// {Tom 20}
+	// {Tiana 21}
+	for _, u := range s.ToList() {
+		fmt.Println(u)
+	}
+}
 ```
 
-集合比较：
+## FifoSet
+
+FifoSet 类似于先进先出的队列，只是元素是去重的。
 
 ```go
-var numbers1 = goset.NewSet(1, 3, 0, -3, 5)
-var numbers2 = goset.NewSet(0, 3)
-var numbers3 = goset.NewSet(3, 0, 3)
-// numbers2 is sub set of numbers1 ? true
-fmt.Println("numbers2 is sub set of numbers1 ?", numbers2.IsSub(numbers1))
-// numbers2 equals numbers3 ? true
-fmt.Println("numbers2 equals numbers3 ?", numbers2.Equals(numbers3))
+var s = goset.NewFifoSet[string]()
+s.Add("e", "a", "b", "a", "c", "b")
+s.Delete("b")
+// e
+// a
+// c
+for _, v := range s.ToList() {
+    fmt.Println(v)
+}
 ```
 
-## IntSet
+## FiloSet
 
-IntSet 方法和 Set 方法一样, 但仅接收 `int` 类型的元素, 并且能够导出有序的 slice：
+FiloSet 类似于先进后出的堆栈，只是元素是去重的。
 
 ```go
-var nums = goset.NewIntSet(9,3,5,7,3,1)
-// [1,3,5,7,9]
-fmt.Println(nums.Tolist(goset.Asc))
-// [9,7,5,3,1]
-fmt.Println(nums.Tolist(goset.Desc))
-// random order of [1,3,5,7,9]
-fmt.Println(nums.Tolist(goset.Random))
-// random order of [1,3,5,7,9]
-fmt.Println(nums.Tolist())
+var s = goset.NewFiloSet[string]()
+s.Add("e", "a", "b", "a", "c", "b")
+s.Delete("b")
+// c
+// a
+// e
+for _, v := range s.ToList() {
+    fmt.Println(v)
+}
 ```
+
+## SortedSet
+
+SortedSet 是一个元素有序的 Set。
+
+```go
+var s1 = goset.NewSortedSet[int]()
+s1.Add(5, 7, 10, 3, -1, 7, 0, 9, 3)
+// -1
+// 0
+// 3
+// 5
+// 7
+// 9
+// 10
+for _, v := range s1.ToList() {
+    fmt.Println(v)
+}
+```
+
+---
+欢迎提 issues 和参与进来。

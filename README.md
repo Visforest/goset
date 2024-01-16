@@ -1,6 +1,8 @@
 English | [中文](README_ZH.md)
 
-A goroutine-safe Set implementation in Golang.
+A goroutine-safe Set implementation in Golang, supports various data types and features. 
+
+It's implemented on Go generics features, so your Go version needs to be >=1.18. 
 
 # Features
 
@@ -9,6 +11,8 @@ A goroutine-safe Set implementation in Golang.
 - Support set math operations: intersect/union/subtract/complement
 - Support set compare: contain/equal
 - Support deep copy
+- Support various kinds of elements: int8,int16,int32,int64,int,string, and so on
+- Support fifo set,filo set,sorted set
 
 # Install
 
@@ -18,74 +22,126 @@ $ go get github.com/Visforest/goset
 
 # Usages
 
-## Set
-Element operations:
+All sets have common functions:
+- Add(...vals)
+- Delete(...vals)
+- Clear()
+- Length() int
+- Has(v) bool
+- Copy() *set
+- ToList() []type
+- Equals(*set) bool
+- IsSub(*set) bool
+- Union(*set) *set
+- Intersect(*set) *set
+- Subtract(*set) *set
+- Complement(*set) *set
 
+## Normal set
+
+specify data type
 ```go
-// create a new set
-var fruits = goset.NewSet("banana", "tomato", "peach")
-// add elements
-fruits.Add("apple","pear")
-// delete elements
-fruits.Delete("tomato")
-// check whether element exists in set
-fruits.Has("apple")
-// clear all elements
-fruits.Clear()
+var myset=goset.NewSet[string]("a","b","e")
+myset.Add("a","c")
+// [ a b e c] 
+fmt.Println(myset.ToList())
 ```
 
-Set view operations:
-
+For int and string elements, `IntSet` and `StrSet` are predefined already:
 ```go
-var fruits = goset.NewSet("banana", "tomato", "peach")
-// get elements in form of slice
-fruits.ToList() 
-// get elements count
-fruits.Length()
-// get a deep copy of fruits
-fruits.Copy()
+var s1 goset.StrSet
+// samsung is in s1? false
+fmt.Printf("samsung is in s1? %t", s1.Has("samsung"))
 ```
 
-Set math operations:
-
+Feel free to customize your Set type, for example:
 ```go
-var fruits = goset.NewSet("banana", "tomato", "peach")
-var vegatables = goset.NewSet("tomato", "cabbage")
+type user struct {
+	name string
+	age  int
+}
+type userSet = goset.Set[user]
 
-// fruits,vegatables union: [banana tomato peach cabbage]
-fmt.Println("fruits,vegatables union:", fruits.Union(vegatables).ToList())
-// fruits,vegatables subtract: [peach banana]
-fmt.Println("fruits,vegatables subtract:", fruits.Subtract(vegatables).ToList())
-// fruits,vegatables intersect: [tomato]
-fmt.Println("fruits,vegatables intersect:", fruits.Intersect(vegatables).ToList())
-// fruits,vegatables complement: [peach banana cabbage]
-fmt.Println("fruits,vegatables complement:", fruits.Complement(vegatables).ToList())
+func main() {
+	s := userSet{Data: make(map[user]struct{})}
+	s.Add(
+		user{
+			name: "Mickey",
+			age:  10,
+		},
+		user{
+			name: "Tom",
+			age:  20,
+		},
+		user{
+			name: "Mickey",
+			age:  10,
+		},
+		user{
+			name: "Tiana",
+			age:  21,
+		},
+	)
+	// {Mickey 10}
+	// {Tom 20}
+	// {Tiana 21}
+	for _, u := range s.ToList() {
+		fmt.Println(u)
+	}
+}
 ```
 
-Set compare operations:
+## FifoSet
+
+FifoSet is like a fifo queue, but elements are deduplicated.
 
 ```go
-var numbers1 = goset.NewSet(1, 3, 0, -3, 5)
-var numbers2 = goset.NewSet(0, 3)
-var numbers3 = goset.NewSet(3, 0, 3)
-// numbers2 is sub set of numbers1 ? true
-fmt.Println("numbers2 is sub set of numbers1 ?", numbers2.IsSub(numbers1))
-// numbers2 equals numbers3 ? true
-fmt.Println("numbers2 equals numbers3 ?", numbers2.Equals(numbers3))
+var s = goset.NewFifoSet[string]()
+s.Add("e", "a", "b", "a", "c", "b")
+s.Delete("b")
+// e
+// a
+// c
+for _, v := range s.ToList() {
+    fmt.Println(v)
+}
 ```
 
-## IntSet
+## FiloSet
 
-IntSet has same methods with Set, but only accecpts `int` elements, and is available to export sorted slice result:
+FiloSet is like a filo stack, but elements are deduplicated.
 
 ```go
-var nums = goset.NewIntSet(9,3,5,7,3,1)
-// [1,3,5,7,9]
-fmt.Println(nums.Tolist(goset.Asc))
-// [9,7,5,3,1]
-fmt.Println(nums.Tolist(goset.Desc))
-// random order of [1,3,5,7,9]
-fmt.Println(nums.Tolist(goset.Random))
-// random order of [1,3,5,7,9]
-fmt.Println(nums.Tolist())
+var s = goset.NewFiloSet[string]()
+s.Add("e", "a", "b", "a", "c", "b")
+s.Delete("b")
+// c
+// a
+// e
+for _, v := range s.ToList() {
+    fmt.Println(v)
+}
 ```
+
+## SortedSet
+
+SortedSet is a set whose elements are stored in asc order.
+
+```go
+var s1 = goset.NewSortedSet[int]()
+s1.Add(5, 7, 10, 3, -1, 7, 0, 9, 3)
+// -1
+// 0
+// 3
+// 5
+// 7
+// 9
+// 10
+for _, v := range s1.ToList() {
+    fmt.Println(v)
+}
+```
+
+---
+
+Feel free to make issues and pull request.

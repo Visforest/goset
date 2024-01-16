@@ -5,14 +5,14 @@ import (
 	"sync"
 )
 
-type Set struct {
+type Set[T comparable] struct {
 	m    sync.RWMutex
-	data map[any]struct{}
+	Data map[T]struct{}
 }
 
 // NewSet creates a new Set
-func NewSet(v ...any) *Set {
-	s := &Set{data: map[any]struct{}{}}
+func NewSet[T comparable](v ...T) *Set[T] {
+	s := &Set[T]{Data: map[T]struct{}{}}
 	if len(v) > 0 {
 		s.Add(v...)
 	}
@@ -20,93 +20,93 @@ func NewSet(v ...any) *Set {
 }
 
 // Add adds elements
-func (s *Set) Add(v ...any) {
+func (s *Set[T]) Add(v ...T) {
 	defer s.m.Unlock()
 	s.m.Lock()
-	if s.data == nil {
-		s.data = make(map[any]struct{})
+	if s.Data == nil {
+		s.Data = make(map[T]struct{})
 	}
 	for _, ele := range v {
-		s.data[ele] = struct{}{}
+		s.Data[ele] = struct{}{}
 	}
 }
 
 // Delete delete elements
-func (s *Set) Delete(v ...any) {
+func (s *Set[T]) Delete(v ...T) {
 	defer s.m.Unlock()
 	s.m.Lock()
-	if s.data == nil {
-		s.data = make(map[any]struct{})
+	if s.Data == nil {
+		s.Data = make(map[T]struct{})
 	}
 	for _, ele := range v {
-		delete(s.data, ele)
+		delete(s.Data, ele)
 	}
 }
 
 // Clear clears all elements
-func (s *Set) Clear() {
+func (s *Set[T]) Clear() {
 	defer s.m.Unlock()
 	s.m.Lock()
-	s.data = make(map[any]struct{})
+	s.Data = make(map[T]struct{})
 }
 
 // Copy returns a deep copy of itself
-func (s *Set) Copy() *Set {
+func (s *Set[T]) Copy() *Set[T] {
 	defer s.m.RUnlock()
 	s.m.RLock()
-	if s.data == nil {
-		s.data = make(map[any]struct{})
+	if s.Data == nil {
+		s.Data = make(map[T]struct{})
 	}
 
-	data := make(map[any]struct{})
-	for v := range s.data {
-		data[v] = struct{}{}
+	Data := make(map[T]struct{})
+	for v := range s.Data {
+		Data[v] = struct{}{}
 	}
-	return &Set{data: data}
+	return &Set[T]{Data: Data}
 }
 
 // Length returns Set length
-func (s *Set) Length() int {
-	return len(s.data)
+func (s *Set[T]) Length() int {
+	return len(s.Data)
 }
 
 // Has returns whether v exists in Set
-func (s *Set) Has(v any) bool {
-	if s.data == nil {
-		s.data = make(map[any]struct{})
+func (s *Set[T]) Has(v T) bool {
+	if s.Data == nil {
+		s.Data = make(map[T]struct{})
 	}
-	_, ok := s.data[v]
+	_, ok := s.Data[v]
 	return ok
 }
 
-// ToList returns data slice
-func (s *Set) ToList() []any {
+// ToList returns Data slice
+func (s *Set[T]) ToList() []T {
 	defer s.m.RUnlock()
 	s.m.RLock()
 
-	if s.data == nil {
-		s.data = make(map[any]struct{})
+	if s.Data == nil {
+		s.Data = make(map[T]struct{})
 	}
 
-	var data = make([]any, s.Length())
+	var Data = make([]T, s.Length())
 	var i int
-	for d := range s.data {
-		data[i] = d
+	for d := range s.Data {
+		Data[i] = d
 		i++
 	}
-	return data
+	return Data
 }
 
 // Equals returns whether Set s has the same members with Set t
-func (s *Set) Equals(t *Set) bool {
+func (s *Set[T]) Equals(t *Set[T]) bool {
 	if t == nil {
 		return false
 	}
-	return reflect.DeepEqual(s.data, t.data)
+	return reflect.DeepEqual(s.Data, t.Data)
 }
 
 // IsSub returns whether it's a part of Set t
-func (s *Set) IsSub(t *Set) bool {
+func (s *Set[T]) IsSub(t *Set[T]) bool {
 	if t == nil {
 		return false
 	}
@@ -120,17 +120,17 @@ func (s *Set) IsSub(t *Set) bool {
 
 	defer s.m.RUnlock()
 	defer t.m.RUnlock()
-	if s.data == nil {
-		s.data = make(map[any]struct{})
+	if s.Data == nil {
+		s.Data = make(map[T]struct{})
 	}
-	if t.data == nil {
-		t.data = make(map[any]struct{})
+	if t.Data == nil {
+		t.Data = make(map[T]struct{})
 	}
 
 	if s.Length() > t.Length() {
 		return false
 	}
-	for v := range s.data {
+	for v := range s.Data {
 		if !t.Has(v) {
 			return false
 		}
@@ -144,7 +144,7 @@ func (s *Set) IsSub(t *Set) bool {
 // var a=NewSet(1,2,3)
 // var b=NewSet(2,3,4)
 // a.Union(b) returns {1,2,3,4}
-func (s *Set) Union(t *Set) *Set {
+func (s *Set[T]) Union(t *Set[T]) *Set[T] {
 	var r = s.Copy()
 	if t == nil || s == t {
 		return r
@@ -165,8 +165,8 @@ func (s *Set) Union(t *Set) *Set {
 // var a=NewSet(1,2,3)
 // var b=NewSet(2,3,4)
 // a.Intersect(b) returns {2,3}
-func (s *Set) Intersect(t *Set) *Set {
-	var r = NewSet()
+func (s *Set[T]) Intersect(t *Set[T]) *Set[T] {
+	var r = NewSet[T]()
 	if t == nil || s.Length() == 0 || t.Length() == 0 {
 		return r
 	}
@@ -181,21 +181,21 @@ func (s *Set) Intersect(t *Set) *Set {
 	defer s.m.RUnlock()
 	defer t.m.RUnlock()
 
-	if s.data == nil {
-		s.data = make(map[any]struct{})
+	if s.Data == nil {
+		s.Data = make(map[T]struct{})
 	}
-	if t.data == nil {
-		t.data = make(map[any]struct{})
+	if t.Data == nil {
+		t.Data = make(map[T]struct{})
 	}
 
 	if s.Length() >= t.Length() {
-		for v := range t.data {
+		for v := range t.Data {
 			if s.Has(v) {
 				r.Add(v)
 			}
 		}
 	} else {
-		for v := range s.data {
+		for v := range s.Data {
 			if t.Has(v) {
 				r.Add(v)
 			}
@@ -210,11 +210,11 @@ func (s *Set) Intersect(t *Set) *Set {
 // var a=NewSet(1,2,3)
 // var b=NewSet(2,3,4)
 // a.Subtract(b) returns {1}
-func (s *Set) Subtract(t *Set) *Set {
+func (s *Set[T]) Subtract(t *Set[T]) *Set[T] {
 	if t == nil || t.Length() == 0 {
 		return s.Copy()
 	}
-	var r = NewSet()
+	var r = NewSet[T]()
 	if s == t {
 		// subtract itself
 		return r
@@ -226,14 +226,14 @@ func (s *Set) Subtract(t *Set) *Set {
 	defer s.m.RUnlock()
 	defer t.m.RUnlock()
 
-	if s.data == nil {
-		s.data = make(map[any]struct{})
+	if s.Data == nil {
+		s.Data = make(map[T]struct{})
 	}
-	if t.data == nil {
-		t.data = make(map[any]struct{})
+	if t.Data == nil {
+		t.Data = make(map[T]struct{})
 	}
 
-	for v := range s.data {
+	for v := range s.Data {
 		if !t.Has(v) {
 			r.Add(v)
 		}
@@ -247,13 +247,13 @@ func (s *Set) Subtract(t *Set) *Set {
 // var a=NewSet(1,2,3)
 // var b=NewSet(2,3,4)
 // a.Complement(b) returns {1,4}
-func (s *Set) Complement(t *Set) *Set {
+func (s *Set[T]) Complement(t *Set[T]) *Set[T] {
 	if t == nil || s.Length() == 0 || t.Length() == 0 {
 		return s.Copy()
 	}
 
 	if s == t {
-		return NewSet()
+		return NewSet[T]()
 	}
 
 	s.m.RLock()
@@ -262,22 +262,22 @@ func (s *Set) Complement(t *Set) *Set {
 	defer s.m.RUnlock()
 	defer t.m.RUnlock()
 
-	if s.data == nil {
-		s.data = make(map[any]struct{})
+	if s.Data == nil {
+		s.Data = make(map[T]struct{})
 	}
-	if t.data == nil {
-		t.data = make(map[any]struct{})
+	if t.Data == nil {
+		t.Data = make(map[T]struct{})
 	}
 
 	var r = s.Union(t)
 	if s.Length() >= t.Length() {
-		for v := range t.data {
+		for v := range t.Data {
 			if s.Has(v) {
 				r.Delete(v)
 			}
 		}
 	} else {
-		for v := range s.data {
+		for v := range s.Data {
 			if t.Has(v) {
 				r.Delete(v)
 			}
