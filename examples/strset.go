@@ -9,11 +9,11 @@ func main() {
 	var s1 goset.StrSet
 	fmt.Printf("s1 len:%d \n", s1.Length())
 
-	fmt.Printf("'samsung is in s1? %t'", s1.Has("samsung"))
+	fmt.Printf("samsung is in s1? %t \n", s1.Has("samsung"))
 
 	s1.Add("apple", "huawei")
 	fmt.Printf("s1: %v \n", s1.ToList())
-	fmt.Printf("'apple is in s1? %t'", s1.Has("apple"))
+	fmt.Printf("apple is in s1? %t \n", s1.Has("apple"))
 
 	var s2 = goset.NewStrSet()
 	s2.Add("xiaomi", "apple")

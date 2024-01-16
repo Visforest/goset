@@ -7,7 +7,9 @@ import (
 )
 
 func main() {
-	var s1 = goset.NewSet()
+	var myset = goset.NewSet[string]("a", "b", "e")
+	myset.Add("a", "c")
+	var s1 = goset.NewSet[string]()
 	s1.Add("a", "b", "c")
 	// after add a,b,c: [c a b]
 	fmt.Println("after add a,b,c:", s1.ToList())
