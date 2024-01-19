@@ -37,6 +37,11 @@ goset 中的各类 Set 有如下相同的函数：
 - Subtract(*set) *set
 - Complement(*set) *set
 
+引入 goset:
+```go
+import "github.com/Visforest/goset/v2"
+```
+
 ## 普通 Set
 
 指定元素数据类型来使用：
@@ -141,6 +146,8 @@ for _, v := range s1.ToList() {
     fmt.Println(v)
 }
 ```
+
+查看 [examples/](examples/) 了解更多用法.
 
 ---
 欢迎提 issues 和参与进来。

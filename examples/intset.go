@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/Visforest/goset"
+	"github.com/Visforest/goset/v2"
 )
 
 func main() {

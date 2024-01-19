@@ -5,69 +5,45 @@ import (
 )
 
 func NewSortedSet[T cmp.Ordered](vals ...T) *SortedSet[T] {
-	s := &SortedSet[T]{newLinearSet[T]()}
+	s := &SortedSet[T]{newLinearSet[T](addSorted[T])}
 	s.Add(vals...)
 	return s
 }
 
+// SortedSet is a set whose elements are stored in asc order
 type SortedSet[T cmp.Ordered] struct {
 	*linearSet[T]
 }
 
-func (l *SortedSet[T]) Add(v ...T) {
-	if len(v) == 0 {
-		return
-	}
-	defer l.m.Unlock()
-	l.m.Lock()
+func (s *SortedSet[T]) Add(vals ...T) {
+	addSorted(s.linearSet, vals...)
+}
 
-	var i int
-	if l.head == nil {
-		// first node
-		n := &setNode[T]{
-			val: v[i],
-		}
-		l.head = n
-		l.tail = n
-		l.data[v[i]] = n
-		i++
-	}
-	for ; i < len(v); i++ {
-		if _, ok := l.data[v[i]]; !ok {
-			n := &setNode[T]{
-				val: v[i],
-			}
-			if cmp.Less(v[i], l.head.val) {
-				// add to head
-				n.next = l.head
-				l.head.pre = n
-				l.head = n
-				l.data[v[i]] = n
-			} else if cmp.Less(l.tail.val, v[i]) {
-				//	add to tail
-				n.pre = l.tail
-				l.tail.next = n
-				l.tail = n
-				l.data[v[i]] = n
-			} else {
-				// search and insert
-				left := l.head
-				right := left.next
-				for right != nil {
-					if cmp.Less(v[i], right.val) {
-						// insert and break
-						left.next = n
-						right.pre = n
-						n.pre = left
-						n.next = right
-						l.data[v[i]] = n
-						break
-					}
-					// go on
-					right = right.next
-					left = left.next
-				}
-			}
-		}
-	}
+// Copy returns a deep copy of itself
+func (s *SortedSet[T]) Copy() *SortedSet[T] {
+	return &SortedSet[T]{s.linearSet.copy(addSorted[T])}
+}
+
+func (s *SortedSet[T]) Equals(t *SortedSet[T]) bool {
+	return s.linearSet.Equals(t.linearSet)
+}
+
+func (s *SortedSet[T]) IsSub(t *SortedSet[T]) bool {
+	return s.linearSet.IsSub(t.linearSet)
+}
+
+func (s *SortedSet[T]) Union(t *SortedSet[T]) *SortedSet[T] {
+	return &SortedSet[T]{s.linearSet.union(t.linearSet, addSorted[T])}
+}
+
+func (s *SortedSet[T]) Subtract(t *SortedSet[T]) *SortedSet[T] {
+	return &SortedSet[T]{s.linearSet.subtract(t.linearSet, addSorted[T])}
+}
+
+func (s *SortedSet[T]) Intersect(t *SortedSet[T]) *SortedSet[T] {
+	return &SortedSet[T]{s.linearSet.intersect(t.linearSet, addSorted[T])}
+}
+
+func (s *SortedSet[T]) Complement(t *SortedSet[T]) *SortedSet[T] {
+	return &SortedSet[T]{s.linearSet.complement(t.linearSet, addSorted[T])}
 }

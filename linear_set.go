@@ -1,9 +1,131 @@
 package goset
 
 import (
+	"cmp"
 	"reflect"
 	"sync"
 )
+
+func addFifo[T comparable](s *linearSet[T], vals ...T) {
+	if len(vals) == 0 {
+		return
+	}
+	defer s.m.Unlock()
+	s.m.Lock()
+
+	var i int
+	if s.head == nil {
+		// first node
+		n := &setNode[T]{
+			val: vals[i],
+		}
+		s.head = n
+		s.tail = n
+		s.data[vals[i]] = n
+		i++
+	}
+	for ; i < len(vals); i++ {
+		if _, ok := s.data[vals[i]]; !ok {
+			n := &setNode[T]{
+				val:  vals[i],
+				pre:  s.tail,
+				next: nil,
+			}
+			s.tail.next = n
+			s.tail = n
+			s.data[vals[i]] = n
+		}
+	}
+}
+
+func addFilo[T comparable](s *linearSet[T], vals ...T) {
+	if len(vals) == 0 {
+		return
+	}
+	defer s.m.Unlock()
+	s.m.Lock()
+
+	var i int
+	if s.tail == nil {
+		// put first value into tail node
+		n := &setNode[T]{
+			val: vals[i],
+		}
+		s.head = n
+		s.tail = n
+		s.data[vals[i]] = n
+		i++
+	}
+	for ; i < len(vals); i++ {
+		if _, ok := s.data[vals[i]]; !ok {
+			n := &setNode[T]{
+				val: vals[i],
+			}
+			n.next = s.head
+			s.head.pre = n
+			s.head = n
+			s.data[vals[i]] = n
+		}
+	}
+}
+
+func addSorted[T cmp.Ordered](s *linearSet[T], vals ...T) {
+	if len(vals) == 0 {
+		return
+	}
+	defer s.m.Unlock()
+	s.m.Lock()
+
+	var i int
+	if s.head == nil {
+		// first node
+		n := &setNode[T]{
+			val: vals[i],
+		}
+		s.head = n
+		s.tail = n
+		s.data[vals[i]] = n
+		i++
+	}
+	for ; i < len(vals); i++ {
+		if _, ok := s.data[vals[i]]; !ok {
+			n := &setNode[T]{
+				val: vals[i],
+			}
+			if cmp.Less(vals[i], s.head.val) {
+				// add to head
+				n.next = s.head
+				s.head.pre = n
+				s.head = n
+				s.data[vals[i]] = n
+			} else if cmp.Less(s.tail.val, vals[i]) {
+				//	add to tail
+				n.pre = s.tail
+				s.tail.next = n
+				s.tail = n
+				s.data[vals[i]] = n
+			} else {
+				// search and insert
+				left := s.head
+				right := left.next
+				for right != nil {
+					if cmp.Less(vals[i], right.val) {
+						// insert and break
+						left.next = n
+						right.pre = n
+						n.pre = left
+						n.next = right
+						s.data[vals[i]] = n
+						break
+					}
+					// go on
+					right = right.next
+					left = left.next
+				}
+			}
+		}
+	}
+}
 
 type setNode[T comparable] struct {
 	val  T
@@ -18,62 +140,30 @@ type linearSet[T comparable] struct {
 	data map[T]*setNode[T]
 }
 
-func newLinearSet[T comparable](vals ...T) *linearSet[T] {
+func newLinearSet[T comparable](add func(s *linearSet[T], vals ...T), vals ...T) *linearSet[T] {
 	s := &linearSet[T]{data: make(map[T]*setNode[T])}
-	s.Add(vals...)
+	add(s, vals...)
 	return s
 }
 
-func (s *linearSet[T]) Add(v ...T) {
-	if len(v) == 0 {
-		return
-	}
+func (s *linearSet[T]) Delete(vals ...T) {
 	defer s.m.Unlock()
 	s.m.Lock()
 
-	var i int
-	if s.head == nil {
-		// first node
-		n := &setNode[T]{
-			val: v[i],
-		}
-		s.head = n
-		s.tail = n
-		s.data[v[i]] = n
-		i++
-	}
-	for ; i < len(v); i++ {
-		if _, ok := s.data[v[i]]; !ok {
-			n := &setNode[T]{
-				val:  v[i],
-				pre:  s.tail,
-				next: nil,
-			}
-			s.tail.next = n
-			s.tail = n
-			s.data[v[i]] = n
-		}
-	}
-}
-
-func (s *linearSet[T]) Delete(v ...T) {
-	defer s.m.Unlock()
-	s.m.Lock()
-
-	for i := range v {
-		if n, ok := s.data[v[i]]; ok {
-			if n.pre != nil {
+	for _, v := range vals {
+		if n, ok := s.data[v]; ok {
+			if n.pre == nil {
+				s.head = n.next
+			} else {
 				n.pre.next = n.next
 			}
-			if n.next != nil {
+			if n.next == nil {
+				s.tail = n.pre
+			} else {
 				n.next.pre = n.pre
 			}
-			delete(s.data, v[i])
+			delete(s.data, v)
 		}
-	}
-	if len(s.data) == 0 {
-		s.head = nil
-		s.tail = nil
 	}
 }
 
@@ -98,14 +188,14 @@ func (s *linearSet[T]) Has(v T) bool {
 }
 
 // Copy returns a deep copy of itself
-func (s *linearSet[T]) Copy() *linearSet[T] {
+func (s *linearSet[T]) copy(add func(s *linearSet[T], vals ...T)) *linearSet[T] {
 	defer s.m.RUnlock()
 	s.m.RLock()
 
-	r := newLinearSet[T]()
+	r := newLinearSet[T](add)
 	cur := s.head
 	for cur != nil {
-		r.Add(cur.val)
+		add(r, cur.val)
 		cur = cur.next
 	}
 	return r
@@ -164,8 +254,8 @@ func (s *linearSet[T]) IsSub(t *linearSet[T]) bool {
 	return true
 }
 
-func (s *linearSet[T]) Union(t *linearSet[T]) *linearSet[T] {
-	r := s.Copy()
+func (s *linearSet[T]) union(t *linearSet[T], add func(s *linearSet[T], vals ...T)) *linearSet[T] {
+	r := s.copy(add)
 	if t == nil || s == t {
 		return r
 	}
@@ -174,20 +264,20 @@ func (s *linearSet[T]) Union(t *linearSet[T]) *linearSet[T] {
 
 	defer s.m.RUnlock()
 	defer t.m.RUnlock()
-	for d := range t.data {
-		r.Add(d)
+	for _, d := range t.ToList() {
+		add(r, d)
 	}
 	return r
 }
 
-func (s *linearSet[T]) Intersect(t *linearSet[T]) *linearSet[T] {
-	r := newLinearSet[T]()
+func (s *linearSet[T]) intersect(t *linearSet[T], add func(s *linearSet[T], vals ...T)) *linearSet[T] {
+	r := newLinearSet[T](add)
 	if s == nil || t == nil || s.Length() == 0 || t.Length() == 0 {
 		return r
 	}
 	if s == t {
 		// intersect itself
-		return s.Copy()
+		return s.copy(add)
 	}
 
 	s.m.RLock()
@@ -196,24 +286,24 @@ func (s *linearSet[T]) Intersect(t *linearSet[T]) *linearSet[T] {
 	defer s.m.RUnlock()
 	defer t.m.RUnlock()
 	if s.Length() >= t.Length() {
-		for v := range t.data {
+		for _, v := range t.ToList() {
 			if s.Has(v) {
-				r.Add(v)
+				add(r, v)
 			}
 		}
 	} else {
-		for v := range s.data {
+		for _, v := range s.ToList() {
 			if t.Has(v) {
-				r.Add(v)
+				add(r, v)
 			}
 		}
 	}
 	return r
 }
 
-func (s *linearSet[T]) Subtract(t *linearSet[T]) *linearSet[T] {
+func (s *linearSet[T]) subtract(t *linearSet[T], add func(s *linearSet[T], vals ...T)) *linearSet[T] {
 	if t == nil || t.Length() == 0 {
-		return s.Copy()
+		return s.copy(add)
 	}
 
 	s.m.RLock()
@@ -222,8 +312,8 @@ func (s *linearSet[T]) Subtract(t *linearSet[T]) *linearSet[T] {
 	defer s.m.RUnlock()
 	defer t.m.RUnlock()
 
-	r := s.Copy()
-	for v := range s.data {
+	r := s.copy(add)
+	for _, v := range s.ToList() {
 		if t.Has(v) {
 			r.Delete(v)
 		}
@@ -231,13 +321,13 @@ func (s *linearSet[T]) Subtract(t *linearSet[T]) *linearSet[T] {
 	return r
 }
 
-func (s *linearSet[T]) Complement(t *linearSet[T]) *linearSet[T] {
+func (s *linearSet[T]) complement(t *linearSet[T], add func(s *linearSet[T], vals ...T)) *linearSet[T] {
 	if s == nil || t == nil || s.Length() == 0 || t.Length() == 0 {
-		return s.Copy()
+		return s.copy(add)
 	}
 
 	if s == t {
-		return newLinearSet[T]()
+		return newLinearSet[T](add)
 	}
 
 	s.m.RLock()
@@ -245,15 +335,15 @@ func (s *linearSet[T]) Complement(t *linearSet[T]) *linearSet[T] {
 	defer s.m.RUnlock()
 	defer t.m.RUnlock()
 
-	var r = s.Union(t)
+	var r = s.union(t, add)
 	if s.Length() >= t.Length() {
-		for v := range t.data {
+		for _, v := range t.ToList() {
 			if s.Has(v) {
 				r.Delete(v)
 			}
 		}
 	} else {
-		for v := range s.data {
+		for _, v := range s.ToList() {
 			if t.Has(v) {
 				r.Delete(v)
 			}
