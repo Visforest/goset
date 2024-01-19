@@ -1,3 +1,3 @@
-module github.com/Visforest/goset
+module github.com/Visforest/goset/v2
 
-go 1.20
+go 1.18

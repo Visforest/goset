@@ -37,6 +37,12 @@ All sets have common functions:
 - Subtract(*set) *set
 - Complement(*set) *set
 
+
+Import goset:
+```go
+import "github.com/Visforest/goset/v2"
+```
+
 ## Normal set
 
 specify data type
@@ -141,6 +147,8 @@ for _, v := range s1.ToList() {
     fmt.Println(v)
 }
 ```
+
+Read [examples/](examples/) to learn more.
 
 ---
 

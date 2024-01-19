@@ -1,42 +1,43 @@
 package goset
 
-// FifoSet is a set that first in,first out
+// FifoSet is a set whose elements are stored by fifo
 type FifoSet[T comparable] struct {
 	*linearSet[T]
 }
 
 func NewFifoSet[T comparable](vals ...T) *FifoSet[T] {
-	return &FifoSet[T]{newLinearSet[T](vals...)}
+	return &FifoSet[T]{newLinearSet[T](addFifo[T], vals...)}
 }
 
-func (l *FifoSet[T]) Add(v ...T) {
-	if len(v) == 0 {
-		return
-	}
-	defer l.m.Unlock()
-	l.m.Lock()
+func (s *FifoSet[T]) Add(vals ...T) {
+	addFifo(s.linearSet, vals...)
+}
 
-	var i int
-	if l.head == nil {
-		// first node
-		n := &setNode[T]{
-			val: v[i],
-		}
-		l.head = n
-		l.tail = n
-		l.data[v[i]] = n
-		i++
-	}
-	for ; i < len(v); i++ {
-		if _, ok := l.data[v[i]]; !ok {
-			n := &setNode[T]{
-				val:  v[i],
-				pre:  l.tail,
-				next: nil,
-			}
-			l.tail.next = n
-			l.tail = n
-			l.data[v[i]] = n
-		}
-	}
+// Copy returns a deep copy of itself
+func (s *FifoSet[T]) Copy() *FifoSet[T] {
+	return &FifoSet[T]{s.linearSet.copy(addFifo[T])}
+}
+
+func (s *FifoSet[T]) Equals(t *FifoSet[T]) bool {
+	return s.linearSet.Equals(t.linearSet)
+}
+
+func (s *FifoSet[T]) IsSub(t *FifoSet[T]) bool {
+	return s.linearSet.IsSub(t.linearSet)
+}
+
+func (s *FifoSet[T]) Union(t *FifoSet[T]) *FifoSet[T] {
+	return &FifoSet[T]{s.linearSet.union(t.linearSet, addFifo[T])}
+}
+
+func (s *FifoSet[T]) Subtract(t *FifoSet[T]) *FifoSet[T] {
+	return &FifoSet[T]{s.linearSet.subtract(t.linearSet, addFifo[T])}
+}
+
+func (s *FifoSet[T]) Intersect(t *FifoSet[T]) *FifoSet[T] {
+	return &FifoSet[T]{s.linearSet.intersect(t.linearSet, addFifo[T])}
+}
+
+func (s *FifoSet[T]) Complement(t *FifoSet[T]) *FifoSet[T] {
+	return &FifoSet[T]{s.linearSet.complement(t.linearSet, addFifo[T])}
 }
