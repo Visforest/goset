@@ -1,9 +1,10 @@
 package goset
 
 import (
-	"cmp"
 	"reflect"
 	"sync"
+
+	cmp "github.com/Visforest/goset/v2/compare"
 )
 
 func addFifo[T comparable](s *linearSet[T], vals ...T) {
