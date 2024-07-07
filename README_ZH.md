@@ -17,7 +17,7 @@ goset 基于 Go 泛型实现，因此 Go 版本需 >=1.18.
 # 安装
 
 ```
-$ go get github.com/Visforest/goset
+$ go get github.com/visforest/goset/v2
 ```
 
 # 使用方法
@@ -39,7 +39,7 @@ goset 中的各类 Set 有如下相同的函数：
 
 引入 goset:
 ```go
-import "github.com/Visforest/goset/v2"
+import "github.com/visforest/goset/v2"
 ```
 
 ## 普通 Set
@@ -52,7 +52,7 @@ myset.Add("a","c")
 fmt.Println(myset.ToList())
 ```
 
-对于 int 和 string 类型的元素，已有预置的 `IntSet` 和 `StrSet` 可供直接使用：
+对于整型和字符串类型的元素，已有预置的 `IntSet`,`Int64Set`,`UintSet`,`Uint64Set` 和 `StrSet` 可供直接使用：
 ```go
 var s1 goset.StrSet
 // samsung is in s1? false

@@ -4,7 +4,7 @@ package goset
 type IntSet = Set[int]
 
 func NewIntSet(vals ...int) *IntSet {
-	s := &IntSet{Data: make(map[int]struct{})}
+	s := &IntSet{}
 	s.Add(vals...)
 	return s
 }
