@@ -1,7 +1,7 @@
 package goset
 
 import (
-	cmp "github.com/Visforest/goset/v2/compare"
+	cmp "github.com/visforest/goset/v2/compare"
 )
 
 func NewSortedSet[T cmp.Ordered](vals ...T) *SortedSet[T] {

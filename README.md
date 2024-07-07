@@ -17,7 +17,7 @@ It's implemented on Go generics features, so your Go version needs to be >=1.18.
 # Install
 
 ```
-$ go get github.com/Visforest/goset
+$ go get github.com/visforest/goset/v2
 ```
 
 # Usages
@@ -40,7 +40,7 @@ All sets have common functions:
 
 Import goset:
 ```go
-import "github.com/Visforest/goset/v2"
+import "github.com/visforest/goset/v2"
 ```
 
 ## Normal set
@@ -53,7 +53,7 @@ myset.Add("a","c")
 fmt.Println(myset.ToList())
 ```
 
-For int and string elements, `IntSet` and `StrSet` are predefined already:
+For integer and string elements, `IntSet`,`Int64Set`,`UintSet`,`Uint64Set` and `StrSet` are predefined already:
 ```go
 var s1 goset.StrSet
 // samsung is in s1? false

@@ -4,7 +4,7 @@ package goset
 type StrSet = Set[string]
 
 func NewStrSet(vals ...string) *StrSet {
-	s := &StrSet{Data: make(map[string]struct{})}
+	s := &StrSet{}
 	s.Add(vals...)
 	return s
 }
